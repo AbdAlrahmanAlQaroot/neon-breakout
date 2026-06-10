@@ -198,6 +198,7 @@ function fail(gameName) {
   overLock = 0.8;
   shake = 10;
   flash = 1;
+  if (navigator.vibrate) navigator.vibrate([90, 40, 120]);
   sfx.over();
   if (score > highs[diff.key]) {
     highs[diff.key] = score;
@@ -1401,6 +1402,7 @@ function nextDelay() {
   return a + Math.random() * (b - a);
 }
 
+let pendingBonus = 0;
 function startSwitch(first = false) {
   const others = GAMES.filter(g => g !== current);
   current = first ? GAMES[Math.floor(Math.random() * GAMES.length)]
@@ -1408,7 +1410,12 @@ function startSwitch(first = false) {
   overlayT = first ? 1.8 : 1.2;
   glitchT = 0.25;
   state = STATE.SWITCH;
-  if (!first) { switches++; sfx.whoosh(); }
+  if (!first) {
+    switches++;
+    pendingBonus = 10 * switches; // surviving the shuffle is the real game
+    if (navigator.vibrate) navigator.vibrate(30);
+    sfx.whoosh();
+  }
 }
 
 function startRun(key) {
@@ -1416,6 +1423,7 @@ function startRun(key) {
   score = 0;
   switches = 0;
   runTime = 0;
+  pendingBonus = 0;
   particles = []; popups = [];
   paused = false;
   for (const g of GAMES) g.init();
@@ -1486,6 +1494,11 @@ function update(dt) {
       switchMax = nextDelay();
       switchTimer = switchMax;
       state = STATE.PLAY;
+      if (pendingBonus) {
+        addScore(pendingBonus, W / 2, 120, 50);
+        popup(W / 2, 100, "SURVIVED ×" + switches, 50);
+        pendingBonus = 0;
+      }
     }
     return;
   }
