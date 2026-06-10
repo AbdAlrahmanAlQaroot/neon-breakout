@@ -1,29 +1,45 @@
-# Neon Breakout
+# Neon Shuffle
 
-A free, browser-based arcade brick breaker. No installs, no ads, no backend — one HTML file.
+8 arcade games. One life. The game switches on you **without warning**.
 
 **Play it:** https://abdalrahmanalqaroot.github.io/neon-breakout/
 
-## Features
+## How it works
 
-- Combo scoring — consecutive bricks without touching the paddle multiply points
-- Explosive bricks (✶) that chain-react and steel bricks that can only be nuked
-- Power-ups: multiball (×3), wide paddle (⟷), slow-mo (◐), lasers (⚡), piercing fireball (◉), extra life (♥)
-- Skull drops (☠) shrink your paddle — catching falling orbs is risk/reward
-- Swaying brick walls from level 4 up, plus 2-hit armored bricks
-- Particles, screen shake, ball trails, floating score popups, and a tiny WebAudio synth for sound
-- Local high score (saved in your browser)
-- Works with mouse, keyboard (← → / A D), and touch
+You pick a difficulty and get thrown into a random game. Every few seconds — you never
+know exactly when — the game freezes and shuffles you into a different one, exactly where
+you left it. Die in **any** game and the whole run is over. One shared score across all eight.
+
+## The games
+
+| Game | You... | Die when... |
+|---|---|---|
+| BREAKOUT | bounce a ball into bricks (power-ups, explosive + steel bricks) | the last ball falls |
+| FLAPPY | flap through neon pipes | you hit a pipe or the ground |
+| SNAKE | eat, grow, steer | you hit a wall or yourself |
+| DODGE | weave through falling asteroids | one hits you |
+| PONG | out-rally a tracking AI | the ball gets past you |
+| RUNNER | jump spikes, duck under bars | you clip anything |
+| STACK | drop sliding blocks on the tower (auto-drops if you stall) | you miss the stack |
+| INVADERS | strafe + autofire at marching aliens | they shoot you or reach you |
+
+## Difficulty
+
+- **EASY** — slower games, lazy switches (8–14s), ×1 score
+- **NORMAL** — fair speeds, 4–9s switches with occasional ambushes, ×1.5 score
+- **HARD** — 1.3× game speed, tiny paddles, near-perfect pong AI, 2.5–6s switches,
+  40% chance of a ~1.5s ambush switch, ×2.5 score
+
+High scores are saved per difficulty in your browser.
 
 ## Controls
 
-| Key | Action |
-|---|---|
-| Mouse / touch / arrows | Move paddle |
-| Click / tap / Space | Start, launch ball |
-| P | Pause |
-| M | Mute |
+Mouse / touch / arrows / WASD move things. Tap or Space jumps, flaps, launches, and drops.
+Snake turns with arrows, or tap the left/right half of the screen. `P` pause, `M` mute.
+
+Getting shuffled in mid-disaster would be unfair, so every game grants a small mercy on
+entry (clearing projectiles about to hit you, auto-turning a doomed snake, etc).
 
 ## Run locally
 
-Open `index.html` in a browser. That's it.
+Open `index.html` in a browser. No build, no dependencies, one file.
