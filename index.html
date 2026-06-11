@@ -1456,19 +1456,19 @@ canvas.addEventListener("pointerdown", e => {
   primaryAction(px, py);
 });
 
-// difficulty buttons on the menu
+// difficulty cards on the menu
+const CARD_W = 142, CARD_H = 122, CARD_Y = 372;
 const BTNS = [
-  { key: "easy", y: 318 },
-  { key: "normal", y: 378 },
-  { key: "hard", y: 438 }
+  { key: "easy", x: 18 },
+  { key: "normal", x: 18 + CARD_W + 12 },
+  { key: "hard", x: 18 + (CARD_W + 12) * 2 }
 ];
-const BTN_W = 250, BTN_H = 46, BTN_X = W / 2 - BTN_W / 2;
 
 function primaryAction(x, y) {
   if (state === STATE.MENU) {
     if (x == null) { startRun("normal"); return; } // space/enter = normal
     for (const b of BTNS) {
-      if (x > BTN_X && x < BTN_X + BTN_W && y > b.y && y < b.y + BTN_H) {
+      if (x > b.x && x < b.x + CARD_W && y > CARD_Y && y < CARD_Y + CARD_H) {
         startRun(b.key);
         return;
       }
@@ -1564,44 +1564,73 @@ function draw() {
   ctx.textAlign = "center";
 
   if (state === STATE.MENU) {
+    drawMenuGrid();
     drawTitle();
+
     ctx.fillStyle = "#9ad7e8";
     ctx.font = "14px monospace";
-    ctx.fillText("8 games · 1 life · it switches without warning", W / 2, 232);
-    ctx.fillStyle = "#5a7a8a";
-    ctx.font = "12px monospace";
-    ctx.fillText("BREAKOUT FLAPPY SNAKE DODGE", W / 2, 262);
-    ctx.fillText("PONG RUNNER STACK INVADERS", W / 2, 280);
+    ctx.textAlign = "center";
+    ctx.fillText("8 games · 1 life · it switches without warning", W / 2, 196);
 
+    // the 8 games as animated icons, 4 × 2
+    for (let i = 0; i < GAMES.length; i++) {
+      const g = GAMES[i];
+      const cx = 60 + (i % 4) * 120;
+      const cy = (i < 4 ? 242 : 318) + Math.sin(pulse * 2.2 + i * 1.7) * 3;
+      drawIcon(g.name, cx, cy);
+      ctx.fillStyle = `hsla(${g.hue}, 80%, 70%, 0.85)`;
+      ctx.font = "9px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(g.name, cx, cy + 33);
+    }
+
+    // difficulty cards
     for (const b of BTNS) {
       const d = DIFFS[b.key];
-      const hov = Math.sin(pulse * 4 + b.y) * 0.06;
+      const glowPulse = b.key === "hard" ? 16 + Math.sin(pulse * 8) * 7 : 10 + Math.sin(pulse * 3 + b.x) * 3;
       ctx.save();
       ctx.shadowColor = `hsl(${d.hue}, 100%, 55%)`;
-      ctx.shadowBlur = b.key === "hard" ? 18 + Math.sin(pulse * 8) * 6 : 12;
-      ctx.fillStyle = `hsla(${d.hue}, 100%, 55%, ${0.16 + hov})`;
-      ctx.fillRect(BTN_X, b.y, BTN_W, BTN_H);
+      ctx.shadowBlur = glowPulse;
+      ctx.fillStyle = `hsla(${d.hue}, 100%, 55%, 0.10)`;
+      ctx.fillRect(b.x, CARD_Y, CARD_W, CARD_H);
       ctx.strokeStyle = `hsl(${d.hue}, 100%, 58%)`;
       ctx.lineWidth = 2;
-      ctx.strokeRect(BTN_X, b.y, BTN_W, BTN_H);
+      ctx.strokeRect(b.x, CARD_Y, CARD_W, CARD_H);
+      // corner accents
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(b.x, CARD_Y + 14); ctx.lineTo(b.x, CARD_Y); ctx.lineTo(b.x + 14, CARD_Y);
+      ctx.moveTo(b.x + CARD_W - 14, CARD_Y + CARD_H); ctx.lineTo(b.x + CARD_W, CARD_Y + CARD_H); ctx.lineTo(b.x + CARD_W, CARD_Y + CARD_H - 14);
+      ctx.stroke();
       ctx.restore();
+
+      const mx = b.x + CARD_W / 2;
+      ctx.textAlign = "center";
       ctx.fillStyle = `hsl(${d.hue}, 100%, 65%)`;
-      ctx.font = "bold 19px monospace";
-      const label = b.key === "hard" ? "☠ HARD ☠" : d.label;
-      ctx.fillText(label, W / 2, b.y + 24);
+      ctx.font = "bold 21px monospace";
+      ctx.fillText(b.key === "hard" ? "☠ " + d.label : d.label, mx, CARD_Y + 34);
       ctx.fillStyle = "#7a9aaa";
       ctx.font = "11px monospace";
-      const sub = b.key === "easy" ? "gentle · ×1 score"
-                : b.key === "normal" ? "fair · ×1.5 score"
-                : "no mercy · ×2.5 score";
-      const best = highs[b.key] ? " · best " + highs[b.key] : "";
-      ctx.fillText(sub + best, W / 2, b.y + 39);
+      ctx.fillText(b.key === "easy" ? "gentle" : b.key === "normal" ? "fair" : "no mercy", mx, CARD_Y + 56);
+      ctx.fillText("×" + d.scoreMult + " score", mx, CARD_Y + 72);
+      if (highs[b.key]) {
+        ctx.fillStyle = "#ffd54a";
+        ctx.font = "bold 12px monospace";
+        ctx.fillText("★ " + highs[b.key], mx, CARD_Y + 98);
+      } else {
+        ctx.fillStyle = "#46606e";
+        ctx.font = "11px monospace";
+        ctx.fillText("unplayed", mx, CARD_Y + 98);
+      }
+      ctx.fillStyle = "#46606e";
+      ctx.font = "10px monospace";
+      ctx.fillText("[" + (BTNS.indexOf(b) + 1) + "]", mx, CARD_Y + 114);
     }
 
     ctx.fillStyle = "#5a7a8a";
     ctx.font = "12px monospace";
-    ctx.fillText("tap a level · or press 1 / 2 / 3", W / 2, 520);
-    ctx.fillText("P pause · M mute", W / 2, 540);
+    pulseText("tap a level to start", W / 2, 530);
+    ctx.fillText("P pause · M mute", W / 2, 552);
   }
 
   if (state === STATE.SWITCH) {
@@ -1703,14 +1732,117 @@ function pulseText(txt, x, y) {
 function drawTitle() {
   ctx.save();
   ctx.textAlign = "center";
-  ctx.font = "bold 44px monospace";
-  ctx.shadowBlur = 26;
+  // neon tubes flicker now and then
+  const flick = Math.random() < 0.03 ? 0.55 + Math.random() * 0.3 : 1;
+  ctx.globalAlpha = flick;
+  ctx.font = "bold 46px monospace";
+  // chromatic fringe
+  ctx.fillStyle = "rgba(255,59,107,0.45)";
+  ctx.fillText("NEON", W / 2 + 2.5, 106);
+  ctx.fillStyle = "rgba(0,229,255,0.45)";
+  ctx.fillText("SHUFFLE", W / 2 - 2.5, 156);
+  ctx.shadowBlur = 28;
   ctx.shadowColor = "#00e5ff";
   ctx.fillStyle = "#00e5ff";
-  ctx.fillText("NEON", W / 2, 130);
+  ctx.fillText("NEON", W / 2, 106);
   ctx.shadowColor = "#ff3b6b";
   ctx.fillStyle = "#ff3b6b";
-  ctx.fillText("SHUFFLE", W / 2, 178);
+  ctx.fillText("SHUFFLE", W / 2, 156);
+  ctx.restore();
+}
+
+function drawMenuGrid() {
+  // synthwave floor below the cards
+  const hy = 565;
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,60,150,0.30)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let k = -8; k <= 8; k++) {
+    ctx.moveTo(W / 2 + k * 10, hy);
+    ctx.lineTo(W / 2 + k * 65, H + 10);
+  }
+  ctx.stroke();
+  for (let n = 0; n < 7; n++) {
+    const t = (pulse * 0.22 + n / 7) % 1;
+    const y = hy + t * t * (H - hy + 10);
+    ctx.strokeStyle = `rgba(255,60,150,${0.10 + t * 0.30})`;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "rgba(0,229,255,0.5)";
+  ctx.beginPath();
+  ctx.moveTo(0, hy);
+  ctx.lineTo(W, hy);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawIcon(name, x, y) {
+  ctx.save();
+  if (name === "BREAKOUT") {
+    for (let r = 0; r < 2; r++)
+      for (let c = 0; c < 3; c++)
+        glowRect(x - 16 + c * 11, y - 15 + r * 8, 9, 6, `hsl(${190 + r * 40},95%,60%)`, 5);
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(x, y + 4, 3.5, 0, Math.PI * 2); ctx.fill();
+    glowRect(x - 12, y + 13, 24, 4, "#00e5ff", 6);
+  } else if (name === "FLAPPY") {
+    glowRect(x + 6, y - 17, 10, 12, "hsl(140,95%,50%)", 5);
+    glowRect(x + 6, y + 5, 10, 13, "hsl(140,95%,50%)", 5);
+    ctx.shadowColor = "hsl(55,100%,60%)"; ctx.shadowBlur = 8;
+    ctx.fillStyle = "hsl(55,100%,60%)";
+    ctx.beginPath(); ctx.arc(x - 7, y, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0; ctx.fillStyle = "#0a0a14";
+    ctx.fillRect(x - 5, y - 3, 2.5, 2.5);
+  } else if (name === "SNAKE") {
+    for (const [dx, dy] of [[-15, 7], [-7, 7], [1, 7], [1, -1]])
+      glowRect(x + dx, y + dy, 7, 7, "hsl(130,95%,55%)", 5);
+    ctx.shadowColor = "hsl(320,100%,60%)"; ctx.shadowBlur = 8;
+    ctx.fillStyle = "hsl(320,100%,62%)";
+    ctx.beginPath(); ctx.arc(x + 11, y - 9, 3.5, 0, Math.PI * 2); ctx.fill();
+  } else if (name === "DODGE") {
+    ctx.shadowColor = "#00e5ff"; ctx.shadowBlur = 8;
+    ctx.fillStyle = "#00e5ff";
+    ctx.beginPath();
+    ctx.moveTo(x - 6, y + 2); ctx.lineTo(x, y + 16); ctx.lineTo(x - 12, y + 16);
+    ctx.closePath(); ctx.fill();
+    ctx.shadowColor = "hsl(15,95%,60%)"; ctx.strokeStyle = "hsl(15,95%,60%)";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x + 8, y - 8, 6.5, 0, Math.PI * 2); ctx.stroke();
+  } else if (name === "PONG") {
+    glowRect(x - 10, y - 15, 20, 4, "hsl(330,100%,60%)", 6);
+    glowRect(x - 10, y + 11, 20, 4, "#00e5ff", 6);
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(x + 4, y - 2, 3.5, 0, Math.PI * 2); ctx.fill();
+  } else if (name === "RUNNER") {
+    glowRect(x - 16, y + 13, 32, 2.5, "hsl(90,70%,45%)", 5);
+    glowRect(x - 12, y + 2, 10, 10, "hsl(90,100%,60%)", 6);
+    ctx.fillStyle = "hsl(0,95%,58%)";
+    ctx.shadowColor = "hsl(0,95%,58%)"; ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(x + 4, y + 13); ctx.lineTo(x + 9, y + 1); ctx.lineTo(x + 14, y + 13);
+    ctx.closePath(); ctx.fill();
+  } else if (name === "STACK") {
+    glowRect(x - 13, y + 7, 26, 7, "hsl(200,95%,58%)", 5);
+    glowRect(x - 10, y - 2, 21, 7, "hsl(228,95%,58%)", 5);
+    glowRect(x - 6 + Math.sin(pulse * 3) * 5, y - 11, 16, 7, "hsl(256,95%,65%)", 6);
+  } else if (name === "INVADERS") {
+    const hue = 350;
+    ctx.shadowColor = `hsl(${hue},95%,60%)`; ctx.shadowBlur = 7;
+    ctx.fillStyle = `hsl(${hue},95%,60%)`;
+    ctx.fillRect(x - 10, y - 6, 20, 12);
+    ctx.fillRect(x - 8, y + 6, 4, 4);
+    ctx.fillRect(x + 4, y + 6, 4, 4);
+    ctx.fillRect(x - 7, y - 10, 3, 4);
+    ctx.fillRect(x + 4, y - 10, 3, 4);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#0a0a14";
+    ctx.fillRect(x - 5, y - 3, 3.5, 3.5);
+    ctx.fillRect(x + 2, y - 3, 3.5, 3.5);
+  }
   ctx.restore();
 }
 
